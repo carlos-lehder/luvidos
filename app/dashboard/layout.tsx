@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { Logo } from "@/components/layout/logo";
 import { UserMenu } from "@/components/layout/user-menu";
+import { AdBanner } from "@/components/layout/ad-banner";
 import { userService } from "@/lib/services/user.service";
 import { getCurrentUser } from "@/lib/supabase/server";
 
@@ -30,7 +31,10 @@ export default async function DashboardLayout({ children }: LayoutProps<"/dashbo
             <DashboardNav />
           </div>
         </aside>
-        <main className="flex min-w-0 flex-1 flex-col gap-6">{children}</main>
+        <main className="flex min-w-0 flex-1 flex-col gap-6">
+          <AdBanner />
+          {children}
+        </main>
       </div>
     </div>
   );

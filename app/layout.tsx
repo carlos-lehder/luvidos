@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -107,6 +108,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
           suppressHydrationWarning
+        />
+        {/* Popunder Ad Network */}
+        <Script
+          src="https://pl31487610.profitableratecpmnetwork.com/0e/09/9f/0e099fd2377452a4b795c082db932510.js"
+          strategy="lazyOnload"
+        />
+        {/* Social Bar Ad Network */}
+        <Script
+          src="https://pl31487611.profitableratecpmnetwork.com/31/74/fd/3174fd6c41ad86c4a2e11d58eaa72618.js"
+          strategy="lazyOnload"
         />
       </head>
       <body className="min-h-full flex flex-col">

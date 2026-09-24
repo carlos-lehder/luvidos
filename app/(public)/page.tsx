@@ -3,6 +3,7 @@ import { ArrowRightIcon, LinkIcon, ShieldCheckIcon, UploadIcon, ZapIcon } from "
 import Link from "next/link";
 import { LogoMark } from "@/components/layout/logo-mark";
 import { Button } from "@/components/ui/button";
+import { AdBanner } from "@/components/layout/ad-banner";
 import { getCurrentUser } from "@/lib/supabase/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -46,6 +47,11 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Ad Banner */}
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+        <AdBanner />
+      </div>
 
       <section className="border-t border-white/5">
         <div className="mx-auto grid max-w-5xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-3">
