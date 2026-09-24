@@ -1,0 +1,22 @@
+# Allow search engines to index the root domain and public pages
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /signup
+Allow: /opengraph-image.png
+
+# Disallow crawling of private/shared albums and media (link-only model)
+Disallow: /album/
+Disallow: /media/
+Disallow: /dashboard/
+Disallow: /auth/
+
+# Disallow crawling of internal routes
+Disallow: /_next/
+Disallow: /api/
+
+# Crawl-delay in seconds (1 second delay between requests)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://luvidos.vercel.app/sitemap.xml
