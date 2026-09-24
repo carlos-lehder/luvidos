@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Luvidos — Media Gallery & Streaming
 
-## Getting Started
+Upload, organize, share and stream images and videos — organized into **albums** that are shared by link only. Nothing is public or listed; a visitor needs the album link.
 
-First, run the development server:
+- **Next.js 16** (App Router, Server Components, Server Actions, Route Handlers)
+- **Supabase** — PostgreSQL, Auth, Row Level Security (application data & media metadata)
+- **Azure Blob Storage** — original files and thumbnails (binary media only)
+- **shadcn/ui + Tailwind CSS v4**, dark theme only
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+> Supabase manages the application and metadata. Azure Blob Storage manages the actual media files. Next.js connects everything together.
+
+## Setup
+
+1. Install dependencies
+
+   ```bash
+   npm install
+   ```
+
+2. Create a Supabase project and run the migrations in
+   [`supabase/migrations/`](supabase/migrations/) **in order** (SQL editor or `supabase db push`):
+   `0001_init.sql`, `0002_albums.sql`, then `0003_link_only.sql`.
+   They create tables, indexes, RLS policies, RPCs, the `album_cards` view and a trigger that creates a `profiles` row for each new auth user.
+
+   In **Authentication → URL configuration**, add `http://localhost:3000/auth/callback` to the redirect URLs.
+
+3. Create an Azure Storage account and a **private** container (e.g. `luvidos-media`).
+   Add a CORS rule on the Blob service so browsers can upload directly:
+
+   | Setting         | Value                                  |
+   | --------------- | -------------------------------------- |
+   | Allowed origins | `http://localhost:3000` (and prod URL) |
+   | Allowed methods | `GET, HEAD, PUT, OPTIONS`              |
+   | Allowed headers | `*`                                    |
+   | Exposed headers | `*`                                    |
+   | Max age         | `3600`                                 |
+
+4. Copy `.env.example` to `.env.local` and fill in the values.
+
+5. Run the dev server
+
+   ```bash
+   npm run dev
+   ```
+
+## Architecture
+
+```
+Browser ──request upload authorization──▶ Next.js (Route Handler)
+        ◀──short-lived SAS URL───────────┘        │ creates media + upload_session rows (Supabase)
+Browser ──PUT blocks directly─────────▶ Azure Blob Storage
+Browser ──complete───────────────────▶ Next.js verifies blob, runs processing, marks media ready
+Viewer  ──stream/range requests──────▶ Azure Blob Storage (read SAS, CDN-friendly)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Layer            | Location                                     |
+| ---------------- | -------------------------------------------- |
+| Supabase clients | `lib/supabase/` (browser, server, proxy)     |
+| Azure storage    | `lib/azure/storage.ts`                       |
+| Services         | `lib/services/` (album, media, upload, user) |
+| Processing       | `lib/processing/media-processor.ts`          |
+| Validation       | `lib/validation/`                            |
+| Limits & config  | `lib/config/media.ts`                        |
+| DB types         | `types/database.ts`                          |
+| Schema / RLS     | `supabase/migrations/`                       |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Blob naming: `{userId}/{mediaId}/original` and `{userId}/{mediaId}/thumbnail`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Albums & visibility
 
-## Learn More
+Every media item belongs to exactly one album. Visibility lives on the album and applies to all items in it. There is no public gallery, search, or profile page — table-level RLS is owner-only, and visitors reach content solely through `SECURITY DEFINER` RPCs keyed by the album/media id.
 
-To learn more about Next.js, take a look at the following resources:
+| Visibility | Listed anywhere | Direct link | Enforcement                                     |
+| ---------- | --------------- | ----------- | ----------------------------------------------- |
+| unlisted   | no              | yes         | `get_album_detail()` / `get_album_media()` RPCs |
+| private    | no              | owner only  | RLS + RPC owner check                           |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev    # development
+npm run lint   # eslint
+npm run build  # production build (also type-checks)
+```
+# luvidos
