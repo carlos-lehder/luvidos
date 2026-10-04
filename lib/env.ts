@@ -20,3 +20,7 @@ export function getAzureStorageEnv() {
     containerName: required("AZURE_STORAGE_CONTAINER_NAME"),
   };
 }
+
+export function getTurnstileSecretKey() {
+  return required("TURNSTILE_SECRET_KEY");
+}

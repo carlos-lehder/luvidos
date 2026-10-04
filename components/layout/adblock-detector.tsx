@@ -1,12 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ShieldAlert } from "lucide-react";
+
+const NO_ADS_PATHS = ["/login", "/signup", "/dashboard"];
+
+function isNoAdsPath(pathname: string) {
+  return NO_ADS_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
 
 export function AdblockDetector() {
   const [blocked, setBlocked] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
+    if (isNoAdsPath(pathname)) return;
     // ponytail: bait-element detection — upgrade to fetch-based check if false positives arise
     const bait = document.createElement("div");
     bait.className =
@@ -43,9 +52,9 @@ export function AdblockDetector() {
       clearTimeout(timer);
       bait.remove();
     };
-  }, []);
+  }, [pathname]);
 
-  if (!blocked) return null;
+  if (!blocked || isNoAdsPath(pathname)) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">

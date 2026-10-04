@@ -4,6 +4,7 @@ import { Loader2Icon } from "lucide-react";
 import Link from "next/link";
 import { useActionState } from "react";
 import { loginAction, magicLinkAction, type AuthState } from "@/app/actions/auth";
+import { Turnstile } from "@/components/auth/turnstile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ export function LoginForm({ next, authError }: { next?: string; authError?: bool
             <Label htmlFor="login-password">Password</Label>
             <Input id="login-password" name="password" type="password" autoComplete="current-password" required minLength={8} />
           </div>
+          <Turnstile />
           <Button type="submit" size="lg" disabled={pwPending}>
             {pwPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
             Sign in
@@ -50,6 +52,7 @@ export function LoginForm({ next, authError }: { next?: string; authError?: bool
             <Label htmlFor="magic-email">Email</Label>
             <Input id="magic-email" name="email" type="email" autoComplete="email" required />
           </div>
+          <Turnstile />
           <Button type="submit" size="lg" disabled={mlPending}>
             {mlPending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
             Send magic link

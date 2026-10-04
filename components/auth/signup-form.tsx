@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signupAction, type AuthState } from "@/app/actions/auth";
 import { StatusAlert } from "@/components/auth/login-form";
+import { Turnstile } from "@/components/auth/turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,6 +45,7 @@ export function SignupForm() {
         <Label htmlFor="signup-password">Password</Label>
         <Input id="signup-password" name="password" type="password" autoComplete="new-password" required minLength={8} />
       </div>
+      <Turnstile />
       <Button type="submit" size="lg" disabled={pending}>
         {pending && <Loader2Icon className="animate-spin" data-icon="inline-start" />}
         Create account
