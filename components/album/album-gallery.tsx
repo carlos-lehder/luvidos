@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon, FilmIcon, PlayIcon, XIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, FilmIcon, PlayIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { VideoPlayer } from "@/components/media/video-player";
@@ -11,7 +11,7 @@ import { formatDuration } from "@/lib/utils/format";
 import type { MediaItem } from "@/types/media";
 
 /** Minimal shared-album gallery: tight grid + full-screen lightbox with keyboard navigation. */
-export function AlbumGallery({ items, allowDownload = true }: { items: MediaItem[]; allowDownload?: boolean }) {
+export function AlbumGallery({ items }: { items: MediaItem[] }) {
   const [index, setIndex] = useState<number | null>(null);
   const open = index !== null;
   const current = index !== null ? items[index] : null;
@@ -95,17 +95,6 @@ export function AlbumGallery({ items, allowDownload = true }: { items: MediaItem
                   {index! + 1} / {items.length}
                 </span>
                 <div className="flex items-center gap-1">
-                  {allowDownload && current.status === "ready" && (
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      className="text-white hover:bg-white/10 hover:text-white"
-                      render={<a href={`/api/media/${current.id}/download`} />}
-                      aria-label="Download"
-                    >
-                      <DownloadIcon />
-                    </Button>
-                  )}
                   <Button
                     size="icon-sm"
                     variant="ghost"

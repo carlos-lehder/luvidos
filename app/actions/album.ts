@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { albumService } from "@/lib/services/album.service";
 import { getCurrentUser } from "@/lib/supabase/server";
-import { albumInputSchema, parseTagsInput, updateAlbumSchema } from "@/lib/validation/media";
+import { albumInputSchema, updateAlbumSchema } from "@/lib/validation/media";
 
 export interface AlbumActionState {
   error?: string;
@@ -22,7 +22,6 @@ function parseAlbumForm(formData: FormData) {
     title: formData.get("title"),
     description: formData.get("description") ?? "",
     visibility: formData.get("visibility"),
-    tags: parseTagsInput(String(formData.get("tags") ?? "")),
   };
 }
 
@@ -42,7 +41,7 @@ export async function createAlbumAction(_prev: AlbumActionState, formData: FormD
   }
 
   revalidateAlbum(albumId);
-  if (formData.get("redirectTo") === "upload") redirect(`/dashboard/upload?album=${albumId}`);
+  if (formData.get("redirectTo") === "upload") redirect(`/dashboard/albums/${albumId}`);
   return { success: "Album created.", albumId };
 }
 

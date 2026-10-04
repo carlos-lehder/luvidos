@@ -6,13 +6,12 @@ import { AlbumGallery } from "@/components/album/album-gallery";
 import { CopyLinkButton } from "@/components/media/copy-link-button";
 import { EmptyState } from "@/components/media/empty-state";
 import { ViewTracker } from "@/components/media/view-tracker";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ALBUM_PAGE_MAX_ITEMS } from "@/lib/config/media";
 import { albumService } from "@/lib/services/album.service";
 import { mediaService } from "@/lib/services/media.service";
 import { getCurrentUser } from "@/lib/supabase/server";
-import { formatCount, getInitials } from "@/lib/utils/format";
+import { formatCount } from "@/lib/utils/format";
 import { absoluteUrl } from "@/lib/utils/site";
 
 export async function generateMetadata({ params }: PageProps<"/album/[id]">): Promise<Metadata> {
@@ -48,7 +47,6 @@ export default async function AlbumPage({ params }: PageProps<"/album/[id]">) {
 
   const media = await mediaService.listByAlbum(album.id, { offset: 0, limit: ALBUM_PAGE_MAX_ITEMS });
   const isOwner = user?.id === album.ownerId;
-  const ownerName = album.owner?.displayName ?? album.owner?.username;
   const shareUrl = absoluteUrl(`/album/${album.id}`);
 
   return (
@@ -74,15 +72,6 @@ export default async function AlbumPage({ params }: PageProps<"/album/[id]">) {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-          {album.owner && (
-            <span className="inline-flex items-center gap-2">
-              <Avatar size="sm">
-                {album.owner.avatarUrl && <AvatarImage src={album.owner.avatarUrl} alt="" />}
-                <AvatarFallback>{getInitials(ownerName)}</AvatarFallback>
-              </Avatar>
-              <span className="text-foreground/80">{ownerName}</span>
-            </span>
-          )}
           {album.imageCount > 0 && (
             <span className="inline-flex items-center gap-1">
               <ImageIcon className="size-3.5" aria-hidden="true" /> {formatCount(album.imageCount)}
@@ -101,7 +90,7 @@ export default async function AlbumPage({ params }: PageProps<"/album/[id]">) {
           title="This album is empty"
           description={isOwner ? "Upload photos or videos to fill it." : "Nothing has been shared here yet."}
           action={
-            isOwner ? <Button render={<Link href={`/dashboard/upload?album=${album.id}`} />}>Upload</Button> : undefined
+            isOwner ? <Button render={<Link href={`/dashboard/albums/${album.id}`} />}>Upload</Button> : undefined
           }
         />
       ) : (

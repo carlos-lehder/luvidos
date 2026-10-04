@@ -4,8 +4,6 @@ export const MAX_THUMBNAIL_SIZE = 2 * 1024 * 1024; // 2 MB
 
 export const MAX_TITLE_LENGTH = 120;
 export const MAX_DESCRIPTION_LENGTH = 2000;
-export const MAX_TAGS_PER_MEDIA = 10;
-export const MAX_TAG_LENGTH = 32;
 
 export const THUMBNAIL_WIDTH = 640;
 

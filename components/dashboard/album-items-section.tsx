@@ -1,63 +1,45 @@
 "use client";
 
-import { FilmIcon, FolderOpenIcon, ImageIcon, UploadCloudIcon } from "lucide-react";
-import Link from "next/link";
+import { UploadCloudIcon, UploadIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
 import { toast } from "sonner";
-import { AlbumPicker, type AlbumOption } from "@/components/upload/album-picker";
+import { MediaGrid } from "@/components/dashboard/media-grid";
+import { EmptyState } from "@/components/media/empty-state";
 import { UploadItemCard } from "@/components/upload/upload-item-card";
+import type { UploadItem } from "@/components/upload/uploader";
 import { Button } from "@/components/ui/button";
-import { ACCEPT_ATTRIBUTE, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE } from "@/lib/config/media";
+import { ACCEPT_ATTRIBUTE } from "@/lib/config/media";
 import { probeFile, requestJson, uploadToAzure, type AuthorizeResponse } from "@/lib/upload/browser";
 import { cn } from "@/lib/utils";
-import { formatBytes } from "@/lib/utils/format";
 import { validateFileDescriptor } from "@/lib/validation/media";
-import type { MediaType } from "@/types/media";
-
-export type UploadStatus =
-  | "queued"
-  | "preparing"
-  | "uploading"
-  | "processing"
-  | "completed"
-  | "failed"
-  | "cancelled";
-
-export interface UploadItem {
-  id: string;
-  file: File;
-  type: MediaType;
-  status: UploadStatus;
-  progress: number;
-  error?: string;
-  previewUrl?: string;
-  poster?: Blob;
-  width?: number;
-  height?: number;
-  duration?: number;
-  title: string;
-  description: string;
-  uploadSessionId?: string;
-  mediaId?: string;
-}
+import type { MediaItem } from "@/types/media";
 
 const CONCURRENCY = 2;
 
-export function Uploader({ albums, initialAlbumId, fixedAlbumId }: { albums?: AlbumOption[]; initialAlbumId?: string | null; fixedAlbumId?: string }) {
+export function AlbumItemsSection({
+  albumId,
+  items: mediaItems,
+  siteUrl,
+  coverMediaId,
+}: {
+  albumId: string;
+  items: MediaItem[];
+  siteUrl: string;
+  coverMediaId: string | null;
+}) {
   const router = useRouter();
-  const [albumId, setAlbumId] = useState<string | null>(fixedAlbumId ?? initialAlbumId ?? albums?.[0]?.id ?? null);
-  const [items, setItems] = useState<UploadItem[]>([]);
+  const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const controllers = useRef(new Map<string, AbortController>());
-  const itemsRef = useRef(items);
+  const uploadsRef = useRef(uploads);
   useEffect(() => {
-    itemsRef.current = items;
-  }, [items]);
+    uploadsRef.current = uploads;
+  }, [uploads]);
 
   const patch = useCallback((id: string, update: Partial<UploadItem>) => {
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...update } : it)));
+    setUploads((prev) => prev.map((it) => (it.id === id ? { ...it, ...update } : it)));
   }, []);
 
   const addFiles = useCallback(
@@ -80,7 +62,7 @@ export function Uploader({ albums, initialAlbumId, fixedAlbumId }: { albums?: Al
         });
       }
       if (accepted.length === 0) return;
-      setItems((prev) => [...prev, ...accepted]);
+      setUploads((prev) => [...prev, ...accepted]);
       for (const item of accepted) {
         probeFile(item.file, item.type).then((probe) => patch(item.id, probe));
       }
@@ -88,18 +70,18 @@ export function Uploader({ albums, initialAlbumId, fixedAlbumId }: { albums?: Al
     [patch],
   );
 
-  async function runUpload(item: UploadItem, targetAlbumId: string) {
+  async function runUpload(item: UploadItem) {
     const controller = new AbortController();
     controllers.current.set(item.id, controller);
     const { signal } = controller;
-    const current = () => itemsRef.current.find((it) => it.id === item.id) ?? item;
+    const current = () => uploadsRef.current.find((it) => it.id === item.id) ?? item;
 
     try {
       patch(item.id, { status: "preparing", progress: 0, error: undefined });
       const auth = await requestJson<AuthorizeResponse>(
         "/api/upload/authorize",
         {
-          albumId: targetAlbumId,
+          albumId,
           fileName: item.file.name,
           mimeType: item.file.type,
           fileSize: item.file.size,
@@ -121,7 +103,7 @@ export function Uploader({ albums, initialAlbumId, fixedAlbumId }: { albums?: Al
           await uploadToAzure(auth.thumbnailUploadUrl, poster, "image/jpeg", { signal });
           thumbnailUploaded = true;
         } catch {
-          // Poster is optional; the media still completes.
+          // Poster is optional
         }
       }
 
@@ -154,26 +136,21 @@ export function Uploader({ albums, initialAlbumId, fixedAlbumId }: { albums?: Al
   }
 
   async function startAll() {
-    if (!albumId) {
-      toast.error("Choose an album first.");
-      return;
-    }
-    const queue = itemsRef.current.filter((it) => ["queued", "failed", "cancelled"].includes(it.status));
+    const queue = uploadsRef.current.filter((it) => ["queued", "failed", "cancelled"].includes(it.status));
     if (queue.length === 0) return;
-    const target = albumId;
     const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
       while (queue.length) {
         const next = queue.shift();
-        if (next) await runUpload(next, target);
+        if (next) await runUpload(next);
       }
     });
     await Promise.all(workers);
-    const done = itemsRef.current.filter((it) => it.status === "completed").length;
+    const done = uploadsRef.current.filter((it) => it.status === "completed").length;
     if (done) toast.success(`${done} file${done === 1 ? "" : "s"} uploaded`);
     router.refresh();
   }
 
-  async function cancel(item: UploadItem) {
+  function cancel(item: UploadItem) {
     controllers.current.get(item.id)?.abort();
     patch(item.id, { status: "cancelled" });
     if (item.uploadSessionId) {
@@ -183,64 +160,26 @@ export function Uploader({ albums, initialAlbumId, fixedAlbumId }: { albums?: Al
 
   function remove(item: UploadItem) {
     if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
-    setItems((prev) => prev.filter((it) => it.id !== item.id));
+    setUploads((prev) => prev.filter((it) => it.id !== item.id));
   }
 
-  function onDrop(event: DragEvent<HTMLDivElement>) {
+  function onDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault();
     setDragging(false);
     if (event.dataTransfer.files?.length) addFiles(event.dataTransfer.files);
   }
 
-  const pendingCount = items.filter((it) => ["queued", "failed", "cancelled"].includes(it.status)).length;
-  const activeCount = items.filter((it) => ["preparing", "uploading", "processing"].includes(it.status)).length;
-  const currentAlbum = albums?.find((a) => a.id === albumId);
+  const pendingCount = uploads.filter((it) => ["queued", "failed", "cancelled"].includes(it.status)).length;
+  const activeCount = uploads.filter((it) => ["preparing", "uploading", "processing"].includes(it.status)).length;
 
   return (
-    <div className="flex flex-col gap-6">
-      {!fixedAlbumId && albums && (
-        <AlbumPicker albums={albums} value={albumId} onChange={setAlbumId} disabled={activeCount > 0} />
-      )}
-
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label="Drop files here or press Enter to browse"
-        onClick={() => inputRef.current?.click()}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            inputRef.current?.click();
-          }
-        }}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragging(true);
-        }}
-        onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-        className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-          dragging ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50",
-        )}
-      >
-        <span className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <UploadCloudIcon className="size-7" aria-hidden="true" />
-        </span>
-        <div className="flex flex-col gap-1">
-          <p className="font-heading text-lg font-medium">Drag & drop files here</p>
-          <p className="text-sm text-muted-foreground">
-            or <span className="font-medium text-foreground underline underline-offset-4">browse</span> from your device
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <ImageIcon className="size-3.5" aria-hidden="true" /> JPG, PNG, WEBP, GIF up to {formatBytes(MAX_IMAGE_SIZE, 0)}
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <FilmIcon className="size-3.5" aria-hidden="true" /> MP4, WEBM, MOV up to {formatBytes(MAX_VIDEO_SIZE, 0)}
-          </span>
-        </div>
+    <section className="flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-heading text-lg font-medium">Items</h2>
+        <Button size="sm" variant="outline" onClick={() => inputRef.current?.click()}>
+          <UploadIcon data-icon="inline-start" /> Upload
+        </Button>
         <input
           ref={inputRef}
           type="file"
@@ -254,49 +193,75 @@ export function Uploader({ albums, initialAlbumId, fixedAlbumId }: { albums?: Al
         />
       </div>
 
-      {items.length > 0 && (
-        <>
+      {/* Upload queue */}
+      {uploads.length > 0 && (
+        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">
-              {items.length} file{items.length === 1 ? "" : "s"}
-              {!fixedAlbumId && currentAlbum && ` → ${currentAlbum.title}`}
+              {uploads.length} file{uploads.length === 1 ? "" : "s"}
               {activeCount > 0 && ` · ${activeCount} in progress`}
             </p>
             <div className="flex items-center gap-2">
-              {!fixedAlbumId && currentAlbum && items.some((it) => it.status === "completed") && (
-                <Button variant="outline" render={<Link href={`/dashboard/albums/${currentAlbum.id}`} />}>
-                  <FolderOpenIcon data-icon="inline-start" /> Open album
-                </Button>
-              )}
               <Button
                 variant="ghost"
-                onClick={() => setItems((prev) => prev.filter((it) => it.status !== "completed"))}
-                disabled={!items.some((it) => it.status === "completed")}
+                size="sm"
+                onClick={() => setUploads((prev) => prev.filter((it) => it.status !== "completed"))}
+                disabled={!uploads.some((it) => it.status === "completed")}
               >
                 Clear completed
               </Button>
-              <Button onClick={startAll} disabled={pendingCount === 0 || activeCount > 0 || !albumId}>
+              <Button size="sm" onClick={startAll} disabled={pendingCount === 0 || activeCount > 0}>
                 <UploadCloudIcon data-icon="inline-start" />
-                Upload {pendingCount > 0 ? `${pendingCount} file${pendingCount === 1 ? "" : "s"}` : ""}
+                Upload {pendingCount > 0 ? `${pendingCount}` : ""}
               </Button>
             </div>
           </div>
-
-          <ul className="flex flex-col gap-4">
-            {items.map((item) => (
+          <ul className="flex flex-col gap-3">
+            {uploads.map((item) => (
               <li key={item.id}>
                 <UploadItemCard
                   item={item}
                   onChange={(update) => patch(item.id, update)}
                   onCancel={() => cancel(item)}
-                  onRetry={() => albumId && runUpload(item, albumId)}
+                  onRetry={() => runUpload(item)}
                   onRemove={() => remove(item)}
                 />
               </li>
             ))}
           </ul>
-        </>
+        </div>
       )}
-    </div>
+
+      {/* Drop zone wrapping grid */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        className={cn(
+          "relative rounded-xl transition-colors",
+          dragging && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+        )}
+      >
+        {/* Drag overlay */}
+        {dragging && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-xl bg-primary/10 backdrop-blur-sm">
+            <UploadCloudIcon className="size-10 text-primary" />
+            <p className="text-sm font-medium text-primary">Drop files to upload</p>
+          </div>
+        )}
+
+        {mediaItems.length === 0 && uploads.length === 0 ? (
+          <EmptyState
+            title="This album is empty"
+            description="Drag & drop files here or click Upload to add media."
+          />
+        ) : (
+          <MediaGrid items={mediaItems} siteUrl={siteUrl} albumId={albumId} coverMediaId={coverMediaId} />
+        )}
+      </div>
+    </section>
   );
 }

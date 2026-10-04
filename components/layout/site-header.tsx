@@ -17,7 +17,7 @@ export async function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           {isAuthenticated ? (
             <>
-              <Button size="sm" render={<Link href="/dashboard/upload" />}>
+              <Button size="sm" render={<Link href="/dashboard/albums" />}>
                 <UploadIcon data-icon="inline-start" /> Upload
               </Button>
               <UserMenu profile={profile} email={user.email ?? null} />

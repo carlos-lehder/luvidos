@@ -78,26 +78,11 @@ export function AlbumForm({
           maxLength={MAX_DESCRIPTION_LENGTH}
         />
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${idPrefix}-tags`}>Tags</Label>
-          <Input
-            id={`${idPrefix}-tags`}
-            name="tags"
-            defaultValue={album?.tags.join(", ") ?? ""}
-            placeholder="travel, nature, 4k"
-            aria-describedby={`${idPrefix}-tags-help`}
-          />
-          <p id={`${idPrefix}-tags-help`} className="text-xs text-muted-foreground">
-            Comma separated, up to 10.
-          </p>
-        </div>
-        <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${idPrefix}-visibility`}>Visibility</Label>
           <VisibilitySelect id={`${idPrefix}-visibility`} value={visibility} onChange={setVisibility} />
           <p className="text-xs text-muted-foreground">Albums are never listed publicly — only people with the link can open them.</p>
         </div>
-      </div>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={pending}>

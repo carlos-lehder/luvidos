@@ -4,8 +4,6 @@ import {
   IMAGE_MIME_TYPES,
   MAX_DESCRIPTION_LENGTH,
   MAX_IMAGE_SIZE,
-  MAX_TAG_LENGTH,
-  MAX_TAGS_PER_MEDIA,
   MAX_THUMBNAIL_SIZE,
   MAX_TITLE_LENGTH,
   MAX_VIDEO_SIZE,
@@ -62,18 +60,6 @@ export function validateFileDescriptor(input: {
 export const visibilitySchema = z.enum(["unlisted", "private"]);
 export const mediaTypeSchema = z.enum(["image", "video"]);
 
-export const tagSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .regex(/^[a-z0-9][a-z0-9-]*$/, "Tags may only contain letters, numbers and dashes.")
-  .max(MAX_TAG_LENGTH);
-
-export const tagsSchema = z
-  .array(tagSchema)
-  .max(MAX_TAGS_PER_MEDIA)
-  .transform((tags) => Array.from(new Set(tags)));
-
 export const titleSchema = z.string().trim().min(1, "Title is required.").max(MAX_TITLE_LENGTH);
 export const descriptionSchema = z
   .string()
@@ -112,7 +98,6 @@ export const updateMediaSchema = z.object({
 export const albumInputSchema = z.object({
   title: titleSchema,
   description: descriptionSchema,
-  tags: tagsSchema,
   visibility: visibilitySchema,
 });
 
@@ -122,10 +107,3 @@ export const updateAlbumSchema = albumInputSchema.extend({
 
 export const THUMBNAIL_MIME = "image/jpeg";
 export { MAX_THUMBNAIL_SIZE };
-
-export function parseTagsInput(raw: string) {
-  return raw
-    .split(/[,\n]/)
-    .map((t) => t.trim().toLowerCase())
-    .filter(Boolean);
-}

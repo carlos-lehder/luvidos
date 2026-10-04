@@ -58,7 +58,6 @@ export interface AlbumItem {
   coverType: MediaType | null;
   createdAt: string;
   updatedAt: string;
-  tags: string[];
   owner: Owner | null;
 }
 

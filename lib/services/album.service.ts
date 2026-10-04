@@ -7,15 +7,13 @@ import {
   deleteMediaBlobs,
   isUuid,
   loadOwners,
-  loadTagsForAlbums,
-  setAlbumTags,
   toOwner,
   type Client,
 } from "@/lib/services/shared";
 import type { AlbumCardRow, MediaVisibility } from "@/types/database";
 import type { AlbumItem, Page } from "@/types/media";
 
-export function toAlbumItem(row: AlbumCardRow, owner: AlbumItem["owner"] = null, tags: string[] = []): AlbumItem {
+export function toAlbumItem(row: AlbumCardRow, owner: AlbumItem["owner"] = null): AlbumItem {
   const coverKey = row.cover_thumbnail_blob_key ?? (row.cover_type === "image" ? row.cover_blob_key : null);
   return {
     id: row.id,
@@ -33,17 +31,13 @@ export function toAlbumItem(row: AlbumCardRow, owner: AlbumItem["owner"] = null,
     coverType: row.cover_type,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    tags,
     owner,
   };
 }
 
-async function hydrate(client: Client, rows: AlbumCardRow[], withTags = false): Promise<AlbumItem[]> {
-  const [owners, tags] = await Promise.all([
-    loadOwners(client, rows.map((r) => r.owner_id)),
-    withTags ? loadTagsForAlbums(client, rows.map((r) => r.id)) : Promise.resolve(new Map<string, string[]>()),
-  ]);
-  return rows.map((r) => toAlbumItem(r, toOwner(owners.get(r.owner_id)), tags.get(r.id) ?? []));
+async function hydrate(client: Client, rows: AlbumCardRow[]): Promise<AlbumItem[]> {
+  const owners = await loadOwners(client, rows.map((r) => r.owner_id));
+  return rows.map((r) => toAlbumItem(r, toOwner(owners.get(r.owner_id))));
 }
 
 export const albumService = {
@@ -53,15 +47,12 @@ export const albumService = {
   async getDetail(id: string): Promise<AlbumItem | null> {
     if (!isUuid(id)) return null;
     const supabase = await createClient();
-    const [{ data, error }, tagsRes] = await Promise.all([
-      supabase.rpc("get_album_detail", { p_id: id }),
-      supabase.rpc("get_album_tags", { p_album_id: id }),
-    ]);
+    const { data, error } = await supabase.rpc("get_album_detail", { p_id: id });
     if (error) throw error;
     const row = (data as AlbumCardRow[] | null)?.[0];
     if (!row) return null;
     const owners = await loadOwners(supabase, [row.owner_id]);
-    return toAlbumItem(row, toOwner(owners.get(row.owner_id)), (tagsRes.data as string[] | null) ?? []);
+    return toAlbumItem(row, toOwner(owners.get(row.owner_id)));
   },
 
   /** All albums of the signed-in owner (RLS restricts to auth.uid()). */
@@ -79,7 +70,7 @@ export const albumService = {
     const rows = (data ?? []) as AlbumCardRow[];
     const total = count ?? rows.length;
     return {
-      items: await hydrate(supabase, rows, true),
+      items: await hydrate(supabase, rows),
       nextOffset: offset + rows.length < total ? offset + limit : null,
       total,
     };
@@ -102,7 +93,7 @@ export const albumService = {
     const supabase = await createClient();
     const { data } = await supabase.from("album_cards").select("*").eq("id", id).eq("owner_id", ownerId).maybeSingle();
     if (!data) return null;
-    const [item] = await hydrate(supabase, [data as AlbumCardRow], true);
+    const [item] = await hydrate(supabase, [data as AlbumCardRow]);
     return item;
   },
 
@@ -115,7 +106,7 @@ export const albumService = {
 
   async create(
     ownerId: string,
-    input: { title: string; description: string | null; visibility: MediaVisibility; tags: string[] },
+    input: { title: string; description: string | null; visibility: MediaVisibility },
   ) {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -124,7 +115,6 @@ export const albumService = {
       .select("id")
       .single();
     if (error || !data) throw error ?? new Error("Insert failed");
-    await setAlbumTags(supabase, data.id, input.tags);
     return data.id;
   },
 
@@ -135,7 +125,6 @@ export const albumService = {
       title: string;
       description: string | null;
       visibility: MediaVisibility;
-      tags: string[];
       coverMediaId?: string | null;
     },
   ) {
@@ -154,7 +143,6 @@ export const albumService = {
       .maybeSingle();
     if (error) throw error;
     if (!data) return null;
-    await setAlbumTags(supabase, input.id, input.tags);
     return data.id;
   },
 

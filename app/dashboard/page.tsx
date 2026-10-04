@@ -1,4 +1,4 @@
-import { EyeIcon, FilmIcon, FolderIcon, FolderPlusIcon, HardDriveIcon, ImageIcon, UploadIcon } from "lucide-react";
+import { EyeIcon, FilmIcon, FolderIcon, FolderPlusIcon, HardDriveIcon, ImageIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -22,11 +22,8 @@ export default async function DashboardPage() {
           <p className="text-sm text-muted-foreground">Your library at a glance.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" render={<Link href="/dashboard/albums/new" />}>
+          <Button render={<Link href="/dashboard/albums/new" />}>
             <FolderPlusIcon data-icon="inline-start" /> New album
-          </Button>
-          <Button render={<Link href="/dashboard/upload" />}>
-            <UploadIcon data-icon="inline-start" /> Upload
           </Button>
         </div>
       </div>

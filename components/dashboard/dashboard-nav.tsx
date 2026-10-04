@@ -3,10 +3,8 @@
 import {
   BarChart3Icon,
   FolderIcon,
-  ImagesIcon,
   LayoutDashboardIcon,
   SettingsIcon,
-  UploadIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,8 +13,6 @@ import { cn } from "@/lib/utils";
 export const DASHBOARD_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboardIcon, exact: true },
   { href: "/dashboard/albums", label: "Albums", icon: FolderIcon },
-  { href: "/dashboard/media", label: "My Media", icon: ImagesIcon },
-  { href: "/dashboard/upload", label: "Upload", icon: UploadIcon },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3Icon },
   { href: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
 ] as const;

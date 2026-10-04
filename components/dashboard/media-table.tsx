@@ -2,7 +2,6 @@
 
 import {
   CopyIcon,
-  DownloadIcon,
   ExternalLinkIcon,
   FilmIcon,
   ImageIcon,
@@ -185,11 +184,6 @@ export function MediaTable({
                         <DropdownMenuItem onClick={() => copyLink(media)}>
                           <CopyIcon /> Copy link
                         </DropdownMenuItem>
-                        {media.status === "ready" && (
-                          <DropdownMenuItem render={<a href={`/api/media/${media.id}/download`} />}>
-                            <DownloadIcon /> Download
-                          </DropdownMenuItem>
-                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem variant="destructive" onClick={() => setPendingDelete(media)}>
                           <Trash2Icon /> Delete

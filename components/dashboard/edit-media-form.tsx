@@ -70,7 +70,7 @@ export function EditMediaForm({ media }: { media: MediaItem }) {
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        Visibility and tags are managed on the album.
+        Visibility is managed on the album.
       </p>
 
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">

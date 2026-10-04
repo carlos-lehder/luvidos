@@ -48,7 +48,7 @@ export function AlbumPicker({
     setOpen(false);
     const next = new URLSearchParams(params);
     next.set("album", albumId);
-    router.replace(`/dashboard/upload?${next}`);
+    router.replace(`/dashboard/albums/${albumId}`);
     onChange(albumId);
   }
 

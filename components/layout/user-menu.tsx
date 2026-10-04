@@ -1,6 +1,6 @@
 "use client";
 
-import { FolderIcon, LayoutDashboardIcon, LogOutIcon, UploadIcon } from "lucide-react";
+import { FolderIcon, LayoutDashboardIcon, LogOutIcon } from "lucide-react";
 import Link from "next/link";
 import { signOutAction } from "@/app/actions/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,9 +44,6 @@ export function UserMenu({ profile, email }: { profile: ProfileRow; email: strin
           </DropdownMenuItem>
           <DropdownMenuItem render={<Link href="/dashboard/albums" />}>
             <FolderIcon /> My albums
-          </DropdownMenuItem>
-          <DropdownMenuItem render={<Link href="/dashboard/upload" />}>
-            <UploadIcon /> Upload
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

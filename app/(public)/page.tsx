@@ -35,7 +35,7 @@ export default async function Home() {
             {" "}<strong>Everything stays private</strong> — nothing is public, nothing is listed, only people with the link can see it.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" render={<Link href={user ? "/dashboard/upload" : "/signup"} />}>
+            <Button size="lg" render={<Link href={user ? "/dashboard/albums" : "/signup"} />}>
               <UploadIcon data-icon="inline-start" />
               {user ? "Upload" : "Start Sharing Free"}
             </Button>
