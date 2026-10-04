@@ -5,6 +5,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AdblockDetector } from "@/components/layout/adblock-detector";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE } from "@/lib/config/media";
 import { getSiteUrl } from "@/lib/utils/site";
 
@@ -121,6 +122,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
+        <AdblockDetector />
         <TooltipProvider>{children}</TooltipProvider>
         <Toaster position="bottom-right" richColors />
       </body>

@@ -31,10 +31,12 @@ export function UserMenu({ profile, email }: { profile: ProfileRow; email: strin
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium text-foreground">{name}</span>
-          {email && <span className="truncate text-xs font-normal">{email}</span>}
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium text-foreground">{name}</span>
+            {email && <span className="truncate text-xs font-normal">{email}</span>}
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem render={<Link href="/dashboard" />}>
