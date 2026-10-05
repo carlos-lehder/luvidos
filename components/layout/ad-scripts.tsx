@@ -16,11 +16,11 @@ export function AdScripts() {
   return (
     <>
       <Script
-        src="https://pl31487610.profitableratecpmnetwork.com/0e/09/9f/0e099fd2377452a4b795c082db932510.js"
+        src="https://pl31667523.profitableratecpmnetwork.com/e3/24/76/e324765c2627d86d51d93b60fe56c0d1.js"
         strategy="lazyOnload"
       />
       <Script
-        src="https://pl31487611.profitableratecpmnetwork.com/31/74/fd/3174fd6c41ad86c4a2e11d58eaa72618.js"
+        src="https://pl31667525.profitableratecpmnetwork.com/bd/31/fa/bd31faf5ccba56fad7c4f16efa65aad4.js"
         strategy="lazyOnload"
       />
     </>

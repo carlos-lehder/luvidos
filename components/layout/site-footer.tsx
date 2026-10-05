@@ -9,7 +9,7 @@ export function SiteFooter() {
         {/* Sponsored Link */}
         <div className="flex items-center justify-center">
           <Link
-            href="https://www.profitableratecpmnetwork.com/iyskdnjdt?key=35d1c6a74aa6f8969336674e809af149"
+            href="https://www.profitableratecpmnetwork.com/thhrz8u58a?key=730c1a15e7bfa7b37a9f1d3f09b019ae"
             target="_blank"
             rel="noopener noreferrer nofollow"
             className="rounded-lg bg-fuchsia-500/10 px-3 py-2 text-xs font-medium text-fuchsia-300 hover:bg-fuchsia-500/20 transition-colors"
